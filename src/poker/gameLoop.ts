@@ -1,3 +1,5 @@
+import { unstyle } from "ansi-colors";
+import chalk from 'chalk';
 import { dealCards } from "../card-deck/dealCards";
 import { Card, newDeck } from "../card-deck/newDeck";
 import { removeCard } from "../card-deck/removeCard";
@@ -22,7 +24,10 @@ type Deps = {
 function makePlayHandLoop(deps: Deps) {
   return function playHandLoop(game: Game) {
     return Promise.resolve(game)
-      .then(tap((g: Game) => deps.print(renderBoard(g, 0))))
+      .then(tap((g: Game) => {
+        console.log("is this 6? ", unstyle(chalk.bgBlue("abc") + chalk.bgGreen("abc")).length);
+        deps.print(renderBoard(g, 0));
+      }))
       .then(async (g) => {
         const action = await deps.getUserInput("Action: ");
         // take action on game
@@ -42,6 +47,7 @@ function makePlayHandLoop(deps: Deps) {
 export function makeGameLoop(deps: Deps) {
   const playHandLoop = makePlayHandLoop(deps);
   return function gameLoop(game: Game) {
+    const modPlayer = (num: number) => num % game.players.length;
     Promise.resolve(game)
       .then((g) => ({
         ...g,
@@ -67,6 +73,7 @@ export function makeGameLoop(deps: Deps) {
 
           return {
             ...game,
+            actionPlayer: modPlayer(game.button + 3),
             deck,
             players: newPlayers,
           };

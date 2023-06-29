@@ -28,13 +28,9 @@ export function makeInitGame({
     const players = Array(parseInt(numPlayers, 10))
       .fill("")
       .map((_, i) => newPlayer(`Player ${i + 1}`));
-    console.log({ numPlayers, players });
-    await getUserInput("pause");
 
     const game = makeNewGame({ newDeck, shuffle })(players);
 
-    gameLoop(game);
-
-    // console.log(JSON.stringify(game, undefined, "  "));
+    return gameLoop(game);
   };
 }

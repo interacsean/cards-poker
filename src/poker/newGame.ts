@@ -8,6 +8,7 @@ export type Game = {
   deck: Deck;
   button: number;
   blinds: [number, number];
+  actionPlayer: number;
 };
 
 type Deps = {
@@ -24,6 +25,7 @@ export function makeNewGame(deps: Deps) {
       players,
       communityCards: [],
       button: startingPlayer ?? 0,
+      actionPlayer: ((startingPlayer || 0) + 1) % players.length,
       deck: shuffle(deps.newDeck),
       blinds: [0.25, 0.5],
     };

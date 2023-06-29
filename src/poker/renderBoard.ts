@@ -1,10 +1,12 @@
 import { calcPot } from "./calcPot";
 import { Game } from "./newGame";
+import { unstyle } from 'ansi-colors';
 import { Player, PlayerHandStatus } from "./newPlayer";
 import chalk from "chalk";
 import { Card } from "../card-deck/newDeck";
 import { getSuit } from "../card-deck/getSuit";
 import { getFace } from "../card-deck/getFace";
+import { padChalkedEnd, padChalkedStart } from "../util/padChalked";
 
 function playerName(player: Player) {
   return player.name.slice(0, 16).padStart(16, " ");
@@ -43,8 +45,6 @@ function renderCard(card: Card, isFolded: boolean) {
 // todo: exception cases
 function cards(player: Player, isActive: boolean) {
   if (!player.currentHand?.hand) return "";
-  // return JSON.stringify({ hand: player.currentHand.hand });
-  // console.log(player.currentHand.hand);
 
   const renderedCards = player.currentHand.hand
     .map((card) => {
@@ -54,23 +54,40 @@ function cards(player: Player, isActive: boolean) {
       return player.currentHand.handStatus === PlayerHandStatus.PREDEAL
         ? ""
         : canSeeCards
-        ? renderCard(card, isFolded)
-        : (isFolded ? chalk.grey : chalk.blue)(" ▣");
+          ? renderCard(card, isFolded)
+          : (isFolded ? chalk.grey : chalk.blue)(" ▣");
     })
     .join(" ");
 
-  return `           ${renderedCards}`;
+  return padChalkedStart(renderedCards, 16);
+}
+
+function addBorder(boardText: string) {
+  const boardLines = boardText.split("\n");
+  const longestLine = boardLines.reduce((longest, line) => unstyle(line).length > longest ? unstyle(line).length : longest, 0);
+
+  const bCol = chalk.rgb(20, 120, 20);
+
+  const evenLengthBoardLines = boardLines.map(
+    line => `${bCol("║")} ${padChalkedEnd(line, longestLine)} ${bCol("║")}`
+  );
+  return `${bCol(`╔${String("═").repeat(longestLine + 2)}╗`)}
+${evenLengthBoardLines.join("\n")}
+${bCol(`╚${String("═").repeat(longestLine + 2)}╝`)}`;
 }
 
 // todo: take getSuit, getFace
 export function renderBoard(game: Game, activePlayer: number) {
-  return `Players
-${game.players.map(playerName).join("")}
-${game.players.map(chips).join("")}
-${game.players.map((p, i) => cards(p, activePlayer === i)).join("")}
-
-${game.players.map(bets).join("")}
+  const boardText = `Players
+  ${game.players.map(playerName).join("")}
+  ${game.players.map(chips).join("")}
+  ${game.players.map((p, i) => cards(p, activePlayer === i)).join("")}
+  
+  ${game.players.map(bets).join("")}
 
 Total Pot: $${calcPot(game)}
 `;
+
+  const borderedBoard = addBorder(boardText);
+  return chalk.bgRgb(0, 55, 0)(borderedBoard);
 }
