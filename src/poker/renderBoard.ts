@@ -7,9 +7,27 @@ import { Card } from "../card-deck/newDeck";
 import { getSuit } from "../card-deck/getSuit";
 import { getFace } from "../card-deck/getFace";
 import { padChalkedEnd, padChalkedStart } from "../util/padChalked";
+import { nextPlayer } from "./nextPlayer";
 
-function playerName(player: Player) {
-  return player.name.slice(0, 16).padStart(16, " ");
+const palette = {
+  darkGreen: chalk.rgb(0, 50, 0),
+  bgDarkGreen: chalk.bgRgb(0, 50, 0),
+  medGreen: chalk.rgb(20, 120, 20),
+  red: chalk.red,
+}
+
+function playerName(game: Game) {
+  return (player: Player, i: number) => {
+    const sbPlayerNum = nextPlayer(game, game.button, false)
+    const position = game.button === i ? '⏺'
+      : sbPlayerNum === i ? 'SB'
+        : nextPlayer(game, sbPlayerNum, false) === i ? 'BB'
+          : sbPlayerNum
+
+    const action = i === game.actionPlayer ? palette.red('▶') : '';
+    const extraLabel = `${action ? `${action} ` : ''}${position ? palette.medGreen(`${position} `) : ''}`;
+    return padChalkedStart(`${extraLabel}${player.name.slice(0, 16 - unstyle(extraLabel).length)}`, 16);
+  }
 }
 
 function chips(player: Player) {
@@ -66,7 +84,7 @@ function addBorder(boardText: string) {
   const boardLines = boardText.split("\n");
   const longestLine = boardLines.reduce((longest, line) => unstyle(line).length > longest ? unstyle(line).length : longest, 0);
 
-  const bCol = chalk.rgb(20, 120, 20);
+  const bCol = palette.medGreen;
 
   const evenLengthBoardLines = boardLines.map(
     line => `${bCol("║")} ${padChalkedEnd(line, longestLine)} ${bCol("║")}`
@@ -79,7 +97,7 @@ ${bCol(`╚${String("═").repeat(longestLine + 2)}╝`)}`;
 // todo: take getSuit, getFace
 export function renderBoard(game: Game, activePlayer: number) {
   const boardText = `Players
-  ${game.players.map(playerName).join("")}
+  ${game.players.map(playerName(game)).join("")}
   ${game.players.map(chips).join("")}
   ${game.players.map((p, i) => cards(p, activePlayer === i)).join("")}
   
@@ -89,5 +107,5 @@ Total Pot: $${calcPot(game)}
 `;
 
   const borderedBoard = addBorder(boardText);
-  return chalk.bgRgb(0, 55, 0)(borderedBoard);
+  return palette.bgDarkGreen(borderedBoard);
 }
