@@ -9,6 +9,9 @@ import { Game } from "./newGame";
 import { PlayerHandStatus } from "./newPlayer";
 import { renderBoard } from "./renderBoard";
 import { takeBlinds } from "./takeBlinds";
+import { nextPlayer } from "./nextPlayer";
+import { set, lensPath } from 'ramda';
+import { validateAction } from "./validateAction";
 
 export type Action = "C" | "F" | "K" | number;
 
@@ -29,17 +32,21 @@ function makePlayHandLoop(deps: Deps) {
         deps.print(renderBoard(g, 0));
       }))
       .then(async (g) => {
-        const action = await deps.getUserInput("Action: ");
-        // take action on game
-        console.log({ action });
-        return g;
-      })
-      .then(async (g) => {
+        const availableActions = "chec[K], [F]old, [C]all, [#]=Bet/Raise"
+        const action = (await deps.getUserInput(`Actions on you (${availableActions}): `)).toUpperCase();
+
+        const validAction = validateAction(game, action);
+        if (!validAction) return g;
+
+        // const game2 = takeAction(game, action);
+
         // check hand is over
         // if hand is over, return
-        // move action?
-        return playHandLoop(g);
-        //
+        const nextPlayerNum = nextPlayer(g, g.actionPlayer);
+        const newG: Game = set(lensPath(["actionPlayer"]), nextPlayerNum, g)
+        if (nextPlayerNum !== null) {
+          return playHandLoop(newG)
+        }
       });
   };
 }
