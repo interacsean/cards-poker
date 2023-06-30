@@ -10,8 +10,9 @@ import { PlayerHandStatus } from "./newPlayer";
 import { renderBoard } from "./renderBoard";
 import { takeBlinds } from "./takeBlinds";
 import { nextPlayer } from "./nextPlayer";
-import { set, lensPath } from 'ramda';
-import { validateAction } from "./validateAction";
+import { over, add, set, lensPath } from 'ramda';
+import { ValidAction, validateAction } from "./validateAction";
+import { takeActionBet } from "./takeActionBet";
 
 export type Action = "C" | "F" | "K" | number;
 
@@ -24,29 +25,44 @@ type Deps = {
   print: (output: string) => void;
 };
 
-function makePlayHandLoop(deps: Deps) {
+function takeAction(game: Game, action: ValidAction) {
+  return action === 'K' ? game
+    : action === 'C' ? game // todo
+      : action === 'F' ? game // todo
+        : typeof action === 'number' ? takeActionBet(game, action)
+          : null;
+}
+
+function makePlayHandLoop({ getUserInput, print }: Deps) {
   return function playHandLoop(game: Game) {
     return Promise.resolve(game)
       .then(tap((g: Game) => {
-        console.log("is this 6? ", unstyle(chalk.bgBlue("abc") + chalk.bgGreen("abc")).length);
-        deps.print(renderBoard(g, 0));
+        print(renderBoard(g, g.actionPlayer));
+        // const { deck, ...curGame } = g;
+        // console.log(JSON.stringify(curGame, undefined, '  '));
       }))
       .then(async (g) => {
-        const availableActions = "chec[K], [F]old, [C]all, [#]=Bet/Raise"
-        const action = (await deps.getUserInput(`Actions on you (${availableActions}): `)).toUpperCase();
+        const availableActions = "chec[K/⮐], [F]old, [C]all, [#]=Bet/Raise"
+        const actionRaw = (await getUserInput(`Actions on you (${availableActions}): `)) || 'K';
+        // (await getUserInput('?'));
+        const validated = validateAction(g, actionRaw); // todo
+        if (!validated[1]) return g;
 
-        const validAction = validateAction(game, action);
-        if (!validAction) return g;
-
-        // const game2 = takeAction(game, action);
+        const g2 = takeAction(g, validated[0]);
 
         // check hand is over
         // if hand is over, return
-        const nextPlayerNum = nextPlayer(g, g.actionPlayer);
-        const newG: Game = set(lensPath(["actionPlayer"]), nextPlayerNum, g)
+        // todo: exception if somebody is all in but other active players still have chips and are not showing
+        const nextPlayerNum = nextPlayer(g2);
+        const g3: Game = set(lensPath(["actionPlayer"]), nextPlayerNum, g2)
         if (nextPlayerNum !== null) {
-          return playHandLoop(newG)
+          return playHandLoop(g3)
         }
+        return g3;
+      })
+      .catch(e => {
+        console.log(e);
+        return;
       });
   };
 }
@@ -98,9 +114,7 @@ export function makeGameLoop(deps: Deps) {
       })
       .then((g) => {
         // assess if game is won by a single player, otherwise recurse:
-        makeGameLoop(deps)(g);
+        // makeGameLoop(deps)(g);
       });
-
-    // console.log(JSON.stringify(gameHandsDealt, undefined, "  "));
   };
 }

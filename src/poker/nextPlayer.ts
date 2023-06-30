@@ -1,7 +1,15 @@
 import { Game } from "./newGame";
 import { PlayerHandStatus } from "./newPlayer";
 
-export function nextPlayer(game: Game, playerNum: number, skipFolded = true) {
+type Cfg = {
+  skipFolded?: boolean,
+  playerNum?: number,
+}
+
+export function nextPlayer(game: Game, cfg: Cfg = {}) {
+  const skipFolded = cfg.skipFolded ?? true;
+  const playerNum = cfg.playerNum ?? game.actionPlayer;
+  // console.log({ playerNum });
   let i: number;
   for (i = 1; i < game.players.length; i++) {
     const tryPlayerNum = (playerNum + i) % game.players.length;

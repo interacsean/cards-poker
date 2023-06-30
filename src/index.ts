@@ -14,4 +14,4 @@ const initGame = makeInitGame({
   shuffle,
   print,
 });
-initGame();
+initGame(4);

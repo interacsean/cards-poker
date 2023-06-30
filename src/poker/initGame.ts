@@ -22,8 +22,8 @@ export function makeInitGame({
   ...deps
 }: Deps) {
   const gameLoop = makeGameLoop({ getUserInput, newDeck, shuffle, ...deps });
-  return async function initGame() {
-    const numPlayers = (await getUserInput("How many players [2]? ")) || "2";
+  return async function initGame(autoNumPlayers?: number) {
+    const numPlayers = `${autoNumPlayers}` || ((await getUserInput("How many players [2]? ")) || "2");
 
     const players = Array(parseInt(numPlayers, 10))
       .fill("")

@@ -18,11 +18,11 @@ const palette = {
 
 function playerName(game: Game) {
   return (player: Player, i: number) => {
-    const sbPlayerNum = nextPlayer(game, game.button, false)
-    const position = game.button === i ? '⏺'
+    const sbPlayerNum = nextPlayer(game, { playerNum: game.button })
+    const position = game.button === i ? '⏺' + game.actionPlayer
       : sbPlayerNum === i ? 'SB'
-        : nextPlayer(game, sbPlayerNum, false) === i ? 'BB'
-          : sbPlayerNum
+        : nextPlayer(game, { playerNum: sbPlayerNum }) === i ? 'BB'
+          : ''
 
     const action = i === game.actionPlayer ? palette.red('▶') : '';
     const extraLabel = `${action ? `${action} ` : ''}${position ? palette.medGreen(`${position} `) : ''}`;
