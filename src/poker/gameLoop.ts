@@ -14,6 +14,7 @@ import { over, add, set, lensPath } from 'ramda';
 import { ValidAction, validateAction } from "./validateAction";
 import { takeActionBet } from "./takeActionBet";
 import { takeActionCall } from "./takeActionCall";
+import { takeActionFold } from "./takeActionFold";
 
 export type Action = "C" | "F" | "K" | number;
 
@@ -29,7 +30,7 @@ type Deps = {
 function takeAction(game: Game, action: ValidAction) {
   return action === 'K' ? game
     : action === 'C' ? takeActionCall(game)
-      : action === 'F' ? game // todo
+      : action === 'F' ? takeActionFold(game)
         : typeof action === 'number' ? takeActionBet(game, action)
           : null;
 }

@@ -8,7 +8,7 @@ export function takeActionCall(game: Game) {
     (curMaxBet, player) => Math.max(player.currentHand?.bet ?? 0, curMaxBet),
     0,
   );
-  const betToPlayer = currentBet - (game.players[game.actionPlayer].currentHand?.bet ?? 0);
+  const betToPlayer = currentBet - (game.players[actionPlayer].currentHand?.bet ?? 0);
 
   const actualBet = Math.min(game.players[actionPlayer].stack, betToPlayer);
 
