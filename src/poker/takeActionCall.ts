@@ -8,10 +8,8 @@ export function takeActionCall(game: Game) {
     (curMaxBet, player) => Math.max(player.currentHand?.bet ?? 0, curMaxBet),
     0,
   );
-  const betToPlayer = currentBet - game.players[game.actionPlayer].currentHand?.bet ?? 0;
+  const betToPlayer = currentBet - (game.players[game.actionPlayer].currentHand?.bet ?? 0);
 
-  // todo: when a community card is dealt, the current round of betting sort of resets
-  
   const actualBet = Math.min(game.players[actionPlayer].stack, betToPlayer);
 
   const game2 = over(lensPath(['players', actionPlayer, 'currentHand', 'bet']), (n) => (n || 0) + actualBet, game);

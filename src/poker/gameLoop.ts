@@ -13,6 +13,7 @@ import { nextPlayer } from "./nextPlayer";
 import { over, add, set, lensPath } from 'ramda';
 import { ValidAction, validateAction } from "./validateAction";
 import { takeActionBet } from "./takeActionBet";
+import { takeActionCall } from "./takeActionCall";
 
 export type Action = "C" | "F" | "K" | number;
 
@@ -27,7 +28,7 @@ type Deps = {
 
 function takeAction(game: Game, action: ValidAction) {
   return action === 'K' ? game
-    : action === 'C' ? game // todo
+    : action === 'C' ? takeActionCall(game)
       : action === 'F' ? game // todo
         : typeof action === 'number' ? takeActionBet(game, action)
           : null;
@@ -43,9 +44,9 @@ function makePlayHandLoop({ getUserInput, print }: Deps) {
       }))
       .then(async (g) => {
         const availableActions = "chec[K/⮐], [F]old, [C]all, [#]=Bet/Raise"
-        const actionRaw = (await getUserInput(`Actions on you (${availableActions}): `)) || 'K';
-        // (await getUserInput('?'));
-        const validated = validateAction(g, actionRaw); // todo
+        const defaultAction = "K";
+        const actionRaw = (await getUserInput(`Action's on you (${availableActions}): `)) || defaultAction;
+        const validated = validateAction(g, actionRaw);
         if (!validated[1]) return g;
 
         const g2 = takeAction(g, validated[0]);
