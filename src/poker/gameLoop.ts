@@ -35,6 +35,40 @@ function takeAction(game: Game, action: ValidAction) {
           : null;
 }
 
+function getAvailableActions(game: Game) {
+  const { actionPlayer } = game;
+
+  const currentBet = game.players.reduce(
+    (curMaxBet, player) => Math.max(player.currentHand?.bet ?? 0, curMaxBet),
+    0,
+  );
+  const betToPlayer = currentBet - (game.players[actionPlayer].currentHand?.bet ?? 0);
+
+  // todo: exception to rule: check for Big Blind opportunity to raise
+
+  let descriptions = [], allowedKeys = [], defaultAction = undefined;
+  if (betToPlayer === 0) {
+    descriptions.push('chec[K/⮐]');
+    allowedKeys.push('K');
+    allowedKeys.push('');
+    descriptions.push('Bet $[#]');
+    allowedKeys.push(0);
+    defaultAction = 'K';
+  } else if (betToPlayer > 0) {
+    descriptions.push('[C]all');
+    allowedKeys.push('C');
+    descriptions.push('Raise-to $[#]');
+    allowedKeys.push(0);
+  }
+  descriptions.push('[F]old');
+  allowedKeys.push('F');
+  return {
+    descriptions,
+    allowedKeys,
+    defaultAction,
+  }
+}
+
 function makePlayHandLoop({ getUserInput, print }: Deps) {
   return function playHandLoop(game: Game) {
     return Promise.resolve(game)
@@ -44,10 +78,16 @@ function makePlayHandLoop({ getUserInput, print }: Deps) {
         // console.log(JSON.stringify(curGame, undefined, '  '));
       }))
       .then(async (g) => {
-        const availableActions = "chec[K/⮐], [F]old, [C]all, [#]=Bet/Raise"
-        const defaultAction = "K";
-        const actionRaw = (await getUserInput(`Action's on you (${availableActions}): `)) || defaultAction;
-        const validated = validateAction(g, actionRaw);
+        const { descriptions, allowedKeys, defaultAction } = getAvailableActions(game);
+        const availableActions = descriptions.join(', '); // "chec[K/⮐], [F]old, [C]all, [#]=Bet/Raise"
+        console.log({ allowedKeys });
+        let actionRaw: string;
+        while (!actionRaw) {
+          actionRaw = (await getUserInput(`Action's on you (${availableActions}): `)) || defaultAction;
+          console.log({ actionRaw });
+        }
+        // deal with 
+        const validated = validateAction(allowedKeys, actionRaw);
         if (!validated[1]) return g;
 
         const g2 = takeAction(g, validated[0]);
